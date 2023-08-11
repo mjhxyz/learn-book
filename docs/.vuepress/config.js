@@ -4,7 +4,7 @@ module.exports = {
 
     themeConfig: {
         sidebar: 'auto',
-        lastUpdated: 'Last Updated',
+        lastUpdated: '更新时间',
         nav: [
             { text: 'Home', link: '/' },
             {
