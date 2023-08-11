@@ -12,7 +12,8 @@ module.exports = {
                 ariaLabel: 'GoLearn',
                 items: [
                     { text: 'Go 基础', link: '/gobasic/' },
-                    { text: 'Go 编程思想', link: '/go/' }
+                    { text: 'Go 编程思想(一)', link: '/go/part1/' },
+                    { text: 'Go 编程思想(二)', link: '/go/part2/' }
                 ]
             },
             { text: 'External', link: 'https://google.com' },
