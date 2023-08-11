@@ -211,3 +211,103 @@ type Writer interface {
 	Write(p []byte) (n int, err error)
 }
 ```
+
+## 函数式编程
+
+::: tip 函数式编程
+- 函数是一等公民: 参数，变量，返回值都可以是函数
+- 高阶函数: 参数为函数的函数
+- 函数 -> 闭包
+:::
+
+### 闭包
+
+::: tip 闭包
+
+- 函数体内部可以访问函数体外部的变量
+- 闭包指的是，函数体 + 局部变量 + 自由变量 + 自由变量引用的环境
+:::
+
+**累加器**
+
+```go
+func adder() func(int) int {
+	s := 0
+	return func(value int) int {
+		s += value
+		return s
+	}
+}
+```
+
+**斐波那契数列**
+
+```go
+func fibonacci() func() int {
+	a, b := 0, 1
+	return func() int {
+		a, b = b, a+b
+		return a
+	}
+}
+```
+
+### 为函数实现接口
+
+> 给函数实现接口，让函数能像文件一样使用, 像文件一样读取 `斐波那契数列`
+
+
+**斐波那契数列升级**
+
+```go
+type intGen func() int
+
+func (g intGen) Read(p []byte) (n int, err error) {
+	next := g()
+	// next 写入 p
+	if next > 10000 {
+		return 0, io.EOF
+	}
+	s := fmt.Sprintf("%d\n", next)
+	// TODO: incorrect if p is too small
+	return strings.NewReader(s).Read(p)
+}
+
+func fibonacci() intGen {
+	a, b := 0, 1
+	return func() int {
+		a, b = b, a+b
+		return a
+	}
+}
+
+func printFileContents(reader io.Reader) {
+	scanner := bufio.NewScanner(reader)
+	for scanner.Scan() {
+		fmt.Println(scanner.Text())
+	}
+}
+
+```
+
+**使用函数遍历二叉树**
+
+> 类似于策略模式, 使用者提供具体的操作细节
+
+```go
+func (node *Node) Traverse() {
+	node.TraversaFunc(func(n *Node) {
+		n.Print()
+	})
+	fmt.Println()
+}
+
+func (node *Node) TraversaFunc(f func(*Node)) {
+	if node == nil {
+		return
+	}
+	node.Left.TraversaFunc(f)
+	f(node)
+	node.Right.TraversaFunc(f)
+}
+```
