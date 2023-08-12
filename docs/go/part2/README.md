@@ -226,6 +226,8 @@ type Writer interface {
 
 - 函数体内部可以访问函数体外部的变量
 - 闭包指的是，函数体 + 局部变量 + 自由变量 + 自由变量引用的环境
+- 更为自然，不需要修饰如何访问自由变量
+- 没有 lambda 表达式，但是有匿名函数
 :::
 
 **累加器**
@@ -311,3 +313,185 @@ func (node *Node) TraversaFunc(f func(*Node)) {
 	node.Right.TraversaFunc(f)
 }
 ```
+
+## 错误处理&资源管理
+
+### defer 调用
+
+::: tip defer 调用
+- 确保调用在函数 `结束时` 发生
+- defer 相当有一个栈, 先进后出
+- 不怕中间有 return,就算有 `panic` 都会执行
+- :point_right: 参数在 `derfer` 语句时计算
+- :point_right: defer 列表为后进先出
+:::
+
+使用 `defer` 的场景:
+
+- Open/Close
+- Lock/Unlock
+- PrintHeader/PrintFooter
+
+
+**基础使用**
+
+```go
+func tryDefer() {
+	defer fmt.Println(1)
+	defer fmt.Println(2)
+	fmt.Println(3)
+	panic("this is panic")
+	fmt.Println(4)
+}
+```
+
+**用于释放资源**
+
+```go
+func writeFile(filename string) {
+	file, err := os.Create(filename)
+	if err != nil {
+		panic(err)
+	}
+	defer file.Close()
+
+	// 用缓冲区写入文件
+	writer := bufio.NewWriter(file)
+	defer writer.Flush()
+
+	f := fib.Fibonacci()
+	for i := 0; i < 20; i++ {
+		fmt.Fprintln(writer, f())
+	}
+}
+```
+
+### 错误处理
+
+::: tip error vs panic
+- 意料之中的:使用 `error` 如: 文件打不开
+- 意料之外的:使用 `panic` 如: 数组越界
+:::
+
+**基本概念**
+
+::: tip 错误处理
+- error 为接口类型, 需要实现 `Error() string` 方法
+- 可以通过 `errors.New` 来创建一个 error
+- 可以通过 type assertion 来获取错误类型
+:::
+
+```go
+	file, err := os.OpenFile(filename, os.O_EXCL|os.O_CREATE, 0666)
+	//err = errors.New("这是一个自定义错误")
+	if err != nil {
+		// OpenFile: // If there is an error, it will be of type *PathError.
+		if pathError, ok := err.(*os.PathError); !ok {
+			// 不是 PathError:
+			panic(err)
+		} else {
+			fmt.Printf("%s, %s, %s\n",
+				pathError.Op,
+				pathError.Path,
+				pathError.Err,
+			)
+		}
+	}
+```
+
+**如何实现统一的错误处理逻辑**
+
+> 可以中间包装一层, 实现的那一层，有 error 就返回 error, 中间层接受业务处理的函数，返回一个框架或者工具所需的函数, 只要业务处理函数出现了错误，那么可以判断错误类型，进行相应的处理
+
+```go
+var logger, _ = zap.NewProduction()
+
+type appHandler func(writer http.ResponseWriter, request *http.Request) error
+
+func errWrapper(handler appHandler) func(writer http.ResponseWriter, request *http.Request) {
+	return func(writer http.ResponseWriter, request *http.Request) {
+		err := handler(writer, request)
+		if err != nil {
+			logger.Warn("Error handling request: " + err.Error())
+			code := http.StatusOK
+			switch {
+			case os.IsNotExist(err):
+				code = http.StatusNotFound
+			case os.IsPermission(err):
+				code = http.StatusForbidden
+			default:
+				code = http.StatusInternalServerError
+			}
+
+			http.Error(
+				writer,
+				http.StatusText(code),
+				code)
+		}
+	}
+}
+```
+
+**进一步的错误处理**
+
+> 上面的代码，只是处理了能够预见的错误，但是还有一些错误是无法预见的，比如 `panic`，这时候可以使用 `recover` 来捕获错误，然后进行处理
+
+```go
+func errWrapper(handler appHandler) func(writer http.ResponseWriter, request *http.Request) {
+	return func(writer http.ResponseWriter, request *http.Request) {
+		defer func() {
+			if r := recover(); r != nil {
+				logger.Sugar().Warn("Panic: ", r)
+				http.Error(
+					writer,
+					http.StatusText(http.StatusInternalServerError),
+					http.StatusInternalServerError)
+			}
+		}()
+
+		...省略代码
+
+	}
+}
+```
+
+**自定义 Error**
+
+> 可以自定义一个 Error 类型，然后实现 `Error() string` 方法, 这也就能让逻辑处理部分，能够自己决定给前端返回什么样的错误信息
+
+```go
+// errWrapper 中的逻辑
+type userError interface {
+	error
+	Message() string
+}
+
+...
+
+if userErr, ok := err.(userError); ok {
+	http.Error(writer, userErr.Message(), http.StatusBadRequest)
+	return
+}
+
+// 具体业务处理器的逻辑
+const prefix = "/list/"
+
+type userError string
+
+func (e userError) Error() string {
+	return e.Message()
+}
+
+func (e userError) Message() string {
+	return string(e)
+}
+
+func HandleFileList(writer http.ResponseWriter, request *http.Request) error {
+	if strings.Index(
+		request.URL.Path, prefix) != 0 {
+		return userError("必须以 " + prefix + " 开头")
+	}
+...
+
+```
+
