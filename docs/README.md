@@ -13,6 +13,7 @@ footer: MIT Licensed | Copyright © 2023-present Mao
 - :point_right: [《Go语言基础》](/gobasic/)
 - :point_right: [《Go编程思想(一)》](/go/part1/)
 - :point_right: [《Go编程思想(二)》](/go/part2/)
+- :point_right: [《Go编程思想(三)》](/go/part3/)
 
 ## :books: 算法复习
 

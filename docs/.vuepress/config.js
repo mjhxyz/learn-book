@@ -13,7 +13,8 @@ module.exports = {
                 items: [
                     { text: 'Go 基础', link: '/gobasic/' },
                     { text: 'Go 编程思想(一)', link: '/go/part1/' },
-                    { text: 'Go 编程思想(二)', link: '/go/part2/' }
+                    { text: 'Go 编程思想(二)', link: '/go/part2/' },
+                    { text: 'Go 编程思想(三)', link: '/go/part3/' }
                 ]
             },
             { text: 'External', link: 'https://google.com' },
