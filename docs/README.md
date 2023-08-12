@@ -9,6 +9,7 @@ footer: MIT Licensed | Copyright © 2023-present Mao
 ---
 
 ## :tada: 语言特性复习
+### :point_down: GO 
 
 - :point_right: [《Go语言基础》](/gobasic/)
 - :point_right: [《Go编程思想(一)》](/go/part1/)

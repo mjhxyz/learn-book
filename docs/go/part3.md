@@ -1,8 +1,6 @@
-# Go 编程思想(三)
+# Go 并发编程
 
-## 并发编程
-
-### 协程
+## 协程
 
 ::: tip 协程
 
@@ -274,6 +272,8 @@ func channelDemo() {
 ```
 
 ## Select
+
+### CSP 模型
 
 ::: tip Select 主要一下操作
 - 用于 `同时` 在多个 `channel` 上等待数据
