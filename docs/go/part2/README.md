@@ -371,6 +371,8 @@ func writeFile(filename string) {
 ::: tip error vs panic
 - 意料之中的:使用 `error` 如: 文件打不开
 - 意料之外的:使用 `panic` 如: 数组越界
+- defer + panic + recover 进行错误处理
+- Type Assertion 来判断错误类型
 :::
 
 **基本概念**
@@ -495,3 +497,157 @@ func HandleFileList(writer http.ResponseWriter, request *http.Request) error {
 
 ```
 
+## 测试
+
+### 传统测试 vs 表格驱动测试
+
+**传统测试**
+
+- 测试数据和测试逻辑混在一起
+- 出错信息不明确
+- 一旦一个数据初测，测试全部结束
+
+**表格驱动测试**
+
+- 分离了测试数据和测试逻辑
+- 明确出错信息
+- 可以部分失败
+- go 语言的语法使得更容易实践表格驱动测试
+
+
+
+### 单元测试
+
+::: tip 测试详情
+- 单独添加一个 `main` 包
+- 里面的测试函数以 `Test`开头
+- 测试函数的参数为 `*testing.T`
+:::
+
+```go
+func TestTriangle(t *testing.T) {
+	tests := []struct{ a, b, c int }{
+		{3, 4, 5},
+		{5, 12, 13},
+		{8, 15, 17},
+		{12, 35, 37},
+		{30000, 40000, 50000},
+	}
+	for _, tt := range tests {
+		if actual := calcTriangle(tt.a, tt.b); actual != tt.c { // 测试失败
+			t.Errorf("calcTriangle(%d, %d); 结果为: %d, 期望为: %d,",
+				tt.a, tt.b, actual, tt.c)
+		}
+	}
+}
+
+```
+然后也可以直接在控制台执行 `go test .` 来运行测试
+```bash
+# 生成测试覆盖率文件
+go test -coverprofile="c.out"
+
+# 生成 html 文件,查看测试覆盖率
+go tool cover -html "c.out"
+```
+
+### 性能测试
+
+::: tip 性能测试
+- 以 `Benchmark` 开头
+- 参数为 `b *testing.B`
+- 测试的次数可以使用 `b.N` 来获取
+:::
+
+```go
+func BenchmarkTriangle(b *testing.B) {
+	s := struct {
+		a, b, c int
+	}{30000, 40000, 50000}
+
+	for i := 0; i < b.N; i++ {
+		actual := calcTriangle(s.a, s.b)
+		if actual != s.c {
+			b.Errorf("calcTriangle(%d,%d)返回为%d, 期望为: %d", s.a, s.b, actual, s.c)
+		}
+	}
+}
+```
+
+```bash
+go test -bench .
+```
+
+### 使用 pprof 进行性能调优
+
+有一段代码，获取最长无重复子串:
+
+```go
+func LengthOfNonRepeatingSubStr(s string) int {
+	chs := []rune(s)
+	lastIndexMap := make(map[rune]int)
+	start := 0
+	result := 0
+
+	for i, c := range chs {
+		if index, ok := lastIndexMap[c]; ok && index >= start {
+			start = index + 1
+		}
+		lastIndexMap[c] = i
+		// 计算最大长度
+		curLength := i - start + 1
+		if curLength > result {
+			result = curLength
+		}
+	}
+	return result
+}
+```
+
+编写 `benchmark` 后使用 `go test -bench . -cpuprofile cpu.out` 生成 cpu.out 文件
+
+```bash
+# 获得操作的命令行
+go tool pprof cpu.out
+
+# Entering interactive mode (type "help" for commands, "o" for options)
+# 打印 web 可以出现, 但是需要安装 graphviz
+# windows 下安装 graphviz
+# https://graphviz.org/download/#windows
+(pprof) web
+```
+
+可以发现耗时的地方是, `rune` 解码，和 `map` 的操作, 由于程序需要支持国际化，所以 `rune` 解码是必须的，那么就需要优化 `map` 的操作, 那么就可以将 `map` 替换为 `[]数组`
+
+```go
+func LengthOfNonRepeatingSubStr(s string) int {
+	chs := []rune(s)
+	lastIndexMap := make([]int, 0xffff)
+	for i := range lastIndexMap {
+		lastIndexMap[i] = -1
+	}
+	start := 0
+	result := 0
+
+	for i, c := range chs {
+		if index := lastIndexMap[c]; index > -1 && index >= start {
+			start = index + 1
+		}
+		lastIndexMap[c] = i
+		// 计算最大长度
+		curLength := i - start + 1
+		if curLength > result {
+			result = curLength
+		}
+	}
+	return result
+}
+```
+
+**性能调优步骤总结**
+
+1. 编写 benchmark
+2. `go test -bench . -cpuprofile cpu.out` 获取性能数据
+3. `go tool pprof cpu.out` 进行性能分析
+4. `web` 查看性能分析结果, 并分析性能瓶颈, 慢在哪里
+5. 优化代码, 重新进行性能分析, 重复 `2-4 步骤`
