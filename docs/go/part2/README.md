@@ -651,3 +651,39 @@ func LengthOfNonRepeatingSubStr(s string) int {
 3. `go tool pprof cpu.out` 进行性能分析
 4. `web` 查看性能分析结果, 并分析性能瓶颈, 慢在哪里
 5. 优化代码, 重新进行性能分析, 重复 `2-4 步骤`
+
+## 文档
+
+::: tip 文档
+- 使用 `godoc` 工具能方便的查看文档
+- 用注释写文档, 注释中的第一行, 会作为文档的简介, 空格后，可以被认为是文档的详细介绍, 会被框起来
+- 可以使用 `单元测试` 文件来描述使用方法(Example)
+:::
+
+- 下载 `godoc` 工具: `go install golang.org/x/tools/cmd/godoc`
+- 启动服务: `godoc -http :6060`
+
+**使用案例**
+
+> 添加 `queue_test.go` 文件, 添加 `ExampleQueue_Pop` 函数, 用于描述 `Pop` 函数的使用方法, 最后添加 `//Output` 注释，来描述输出是什么，添加后，就可以在 `godoc` 中查看到, 并且可以直接运行
+
+```go
+func ExampleQueue_Pop() {
+	q := Queue{1}
+	q.Push(2)
+	q.Push(3)
+	fmt.Println(q.Pop())
+	fmt.Println(q.Pop())
+	fmt.Println(q.IsEmpty())
+	fmt.Println(q.Pop())
+	fmt.Println(q.IsEmpty())
+
+	// Output:
+	//1
+	//2
+	//false
+	//3
+	//true
+}
+```
+
