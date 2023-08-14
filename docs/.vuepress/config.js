@@ -1,8 +1,11 @@
-module.exports = {
+import { defaultTheme } from '@vuepress/theme-default'
+import { hopeTheme } from "vuepress-theme-hope";
+
+export default {
     title: '学习笔记',
     description: '我自己的学习笔记, 自用',
 
-    themeConfig: {
+    theme: hopeTheme({
         sidebarDepth: 3,
         sidebar: {
             '/go/': [
@@ -15,7 +18,7 @@ module.exports = {
             ]
         },
         lastUpdated: '更新时间',
-        nav: [
+        navbar: [
             { text: 'Home', link: '/' },
             {
                 text: 'Go学习笔记',
@@ -31,6 +34,5 @@ module.exports = {
             { text: 'External', link: 'https://google.com' },
             // { text: 'test', link: 'test', target: '_self', rel: '' }
         ]
-    },
-    plugins: ['vuepress-plugin-smooth-scroll'],
+    })
 }
