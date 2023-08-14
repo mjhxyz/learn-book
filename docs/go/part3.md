@@ -380,3 +380,84 @@ func (a *AtomicInt) get() int {
 }
 ```
 
+## 并发模式
+
+::: tip 并发模式
+- 生成器
+- 可以当作服务或者任务
+:::
+
+### 生成器
+
+```go
+// 生成消息的生成器
+func msgGen(name string) chan string {
+	c := make(chan string)
+	go func() {
+		i := 0
+		for {
+			time.Sleep(time.Duration(rand.Intn(2000)) * time.Millisecond)
+			c <- fmt.Sprintf("服务 %s: 消息 %d", name, i)
+			i++
+		}
+	}()
+	return c
+}
+
+func main() {
+	m1 := msgGen("service1")
+	m2 := msgGen("service2")
+	for {
+		fmt.Println(<-m1)
+		fmt.Println(<-m2)
+	}
+}
+```
+
+但是上面的代码实际上是`交替继续`，而不是`并发`的, 因此还能继续优化,同时等待多个服务, 两种方案:
+
+#### fanIn
+
+> 将多个 channel `合并` 成一个 channel
+
+**基本实现**
+
+- 适合于 `channel` 的个数不知道的情况
+- 注意这里有个坑，就是 go 闭包的问题，需要传一个参数进去，不然会出现开的每一个协程都是 `同一个` channel 的问题
+
+```go
+func fanIn(chs ...chan string) chan string {
+	c := make(chan string)
+	// 创建多个 goroutine, 分别从不同的 channel 中获取数据
+	for _, ch := range chs {
+		go func(ch chan string) {
+			for {
+				c <- <-ch
+			}
+		}(ch)
+	}
+	return c
+}
+```
+
+**通过select实现**
+
+使用 `select` 可以实现 `fanIn` 的功能, 优点:
+
+1. 不管多少个 `channel`, 只需要一个 `goroutine`
+2. 代码更加简洁
+
+```go
+func fanInBySelect(c1, c2 chan string) chan string {
+	c := make(chan string)
+	go func() {
+		for {
+			select {
+			case c <- <-c1:
+			case c <- <-c2:
+			}
+		}
+	}()
+	return c
+}
+```
