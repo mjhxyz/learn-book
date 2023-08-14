@@ -23,3 +23,8 @@ footer: MIT Licensed | Copyright © 2023-present Mao
 
 ## :infinity: 面试题
 
+- [《操作系统》](/interview/os)
+- [《计算机网络》](/interview/network)
+- [《数据库》](/interview/db)
+- [《Java面试题》](/interview/java)
+
