@@ -11,6 +11,7 @@ module.exports = {
                 'part1',
                 'part2',
                 'part3',
+                'part4',
             ]
         },
         lastUpdated: '更新时间',
