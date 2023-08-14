@@ -11,10 +11,10 @@ footer: MIT Licensed | Copyright © 2023-present Mao
 ## :tada: 语言特性复习
 ### :point_down: GO 
 
-- :point_right: [《Go语言基础》](/gobasic/)
-- :point_right: [《Go编程思想(一)》](/go/part1/)
-- :point_right: [《Go编程思想(二)》](/go/part2/)
-- :point_right: [《Go编程思想(三)》](/go/part3/)
+- :point_right: [《Go语言基础》](/gobasic/) : Go 的安装以及基础语法说明
+- :point_right: [《Go数据结构&包管理》](/go/part1/) : Go 的一些特殊的特殊结构，类型以及包管理
+- :point_right: [《Go面向结构&单元测试》](/go/part2/) : Go 的面向接口编程，函数式编程以及单元测试,性能调优和文档编写
+- :point_right: [《Go并发编程》](/go/part3/)
 
 ## :books: 算法复习
 
