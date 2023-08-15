@@ -6,7 +6,8 @@ export default {
     description: '我自己的学习笔记, 自用',
 
     theme: hopeTheme({
-        sidebarDepth: 3,
+        sidebarDepth: 4,
+        headerDepth: 4,
         sidebar: {
             '/go/': [
                 '',
@@ -31,10 +32,10 @@ export default {
                 text: '面试题笔记',
                 link: '/interview/',
                 items: [
-                    { text: '操作系统', link: '/interview/os' },
-                    { text: '计算机网络', link: '/interview/network' },
-                    { text: '数据库', link: '/interview/db' },
-                    { text: 'Java面试题', link: '/interview/java' },
+                    { text: '操作系统', link: '/interview/os/' },
+                    { text: '计算机网络', link: '/interview/network/' },
+                    { text: '数据库', link: '/interview/db/' },
+                    { text: 'Java面试题', link: '/interview/java/' },
                 ]
             },
             {
