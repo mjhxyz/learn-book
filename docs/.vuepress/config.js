@@ -5,12 +5,6 @@ export default {
     title: '学习笔记',
     description: '我自己的学习笔记, 自用',
 
-    head: [
-        {
-            'link': '/public/css/index.css'
-        }
-    ],
-
     theme: hopeTheme({
         sidebarDepth: 4,
         headerDepth: 4,
